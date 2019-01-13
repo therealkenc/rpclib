@@ -2,8 +2,7 @@
 
 #include <future>
 #include <memory>
-
-#include "nonstd/optional.hpp"
+#include <optional>
 
 #include "rpc/config.h"
 #include "rpc/detail/log.h"
@@ -32,8 +31,9 @@ public:
     //! \param addr The address of the server to connect to. This might be an
     //! IP address or a host name, too.
     //! \param port The port on the server to connect to.
-    client(std::string const &addr, uint16_t port);
-
+    //client(std::string const &addr, uint16_t port);
+    client(std::string const &name);
+    
     //! \cond DOXYGEN_SKIP
     client(client const &) = delete;
     //! \endcond
@@ -105,7 +105,7 @@ public:
     //! the preferred timeout mechanism remains using std::future.
     //!
     //! The default value for timeout is 5000ms (5 seconds).
-    nonstd::optional<int64_t> get_timeout() const;
+    std::optional<int64_t> get_timeout() const;
 
     //! \brief Sets the timeout for synchronous calls. For more information,
     //! see get_timeout().

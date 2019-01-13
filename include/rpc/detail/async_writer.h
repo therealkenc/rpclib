@@ -20,7 +20,7 @@ namespace detail {
 class async_writer : public std::enable_shared_from_this<async_writer> {
 public:
     async_writer(RPCLIB_ASIO::io_service *io,
-                 RPCLIB_ASIO::ip::tcp::socket socket)
+                 RPCLIB_ASIO::local::stream_protocol::socket socket)
         : socket_(std::move(socket)), write_strand_(*io), exit_(false) {}
 
     void do_write() {
@@ -51,7 +51,7 @@ public:
                         LOG_INFO("Closing socket");
                         try {
                             socket_.shutdown(
-                                RPCLIB_ASIO::ip::tcp::socket::shutdown_both);
+                                RPCLIB_ASIO::local::stream_protocol::socket::shutdown_both);
                         }
                         catch (std::system_error &e) {
                             (void)e;
@@ -81,7 +81,7 @@ protected:
     }
 
 protected:
-    RPCLIB_ASIO::ip::tcp::socket socket_;
+    RPCLIB_ASIO::local::stream_protocol::socket socket_;
     RPCLIB_ASIO::strand write_strand_;
     std::atomic_bool exit_{false};
     bool exited_ = false;

@@ -49,16 +49,16 @@ response dispatcher::dispatch_call(RPCLIB_MSGPACK::object const &msg,
             return response::make_error(
                 id, RPCLIB_FMT::format("rpclib: {}", e.what()));
         } catch (std::exception &e) {
-            if (!suppress_exceptions) {
-                throw;
-            }
-            return response::make_error(
-                id,
-                RPCLIB_FMT::format("rpclib: function '{0}' (called with {1} "
+            std::string err = RPCLIB_FMT::format("rpclib: function '{0}' (called with {1} "
                                    "arg(s)) "
                                    "threw an exception. The exception "
                                    "contained this information: {2}.",
-                                   name, args.via.array.size, e.what()));
+                                   name, args.via.array.size, e.what());
+            if (!suppress_exceptions) {
+                throw std::runtime_error(err); // rethrow
+            }
+            return response::make_error(
+                id, err);
         } catch (rpc::detail::handler_error &) {
             // doing nothing, the exception was only thrown to
             // return immediately

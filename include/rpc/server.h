@@ -3,17 +3,25 @@
 #ifndef SERVER_H_S0HB5KXY
 #define SERVER_H_S0HB5KXY
 
+#include <functional>
+#include <optional>
+
 #include "rpc/config.h"
 #include "rpc/msgpack.hpp"
 #include "rpc/dispatcher.h"
 
 #include "rpc/detail/pimpl.h"
+#include "rpc/this_session.h"
 
 namespace rpc {
 
 namespace detail {
 class server_session;
 }
+
+using session_end_callback_t = std::function<int(session_id_t session_id)>;
+template<class T>
+using optional_ref = std::optional<std::reference_wrapper<T>>;
 
 //! \brief Implements a msgpack-rpc server. This is the main interfacing
 //! point with the library for creating servers.
@@ -27,17 +35,12 @@ class server_session;
 //! This class is not copyable, but moveable.
 class server {
 public:
+#if 0
     //! \brief Constructs a server that listens on the localhost on the
     //! specified port.
     //!
     //! \param port The port number to listen on.
     explicit server(uint16_t port);
-
-    //! \brief Move constructor. This is implemented by calling the
-    //! move assignment operator.
-    //!
-    //! \param other The other instance to move from.
-    server(server&& other) noexcept;
 
     //! \brief Constructs a server that listens on the specified address on
     //! the specified port.
@@ -46,6 +49,14 @@ public:
     //! network adapaters control the given address.
     //! \param port The port number to listen on.
     server(std::string const &address, uint16_t port);
+#endif
+    //! \brief Move constructor. This is implemented by calling the
+    //! move assignment operator.
+    //!
+    //! \param other The other instance to move from.
+    server(server&& other) noexcept;
+    
+    server(std::string const &name);
 
     //! \brief Destructor.
     //!
@@ -67,6 +78,7 @@ public:
     //! that calls `run`. Reads and writes are initiated by this function
     //! internally as well.
     void run();
+    void run(session_end_callback_t session_end_callback);
 
     //! \brief Starts the server loop on one or more threads. This is a
     //! non-blocking call.
@@ -115,6 +127,7 @@ private:
 
 private:
 	RPCLIB_DECLARE_PIMPL()
+    optional_ref<session_end_callback_t> session_end_callback_;
     std::shared_ptr<detail::dispatcher> disp_;
 };
 

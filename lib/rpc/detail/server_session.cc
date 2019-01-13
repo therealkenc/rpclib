@@ -15,7 +15,7 @@ static constexpr std::size_t default_buffer_size =
     rpc::constants::DEFAULT_BUFFER_SIZE;
 
 server_session::server_session(server *srv, RPCLIB_ASIO::io_service *io,
-                               RPCLIB_ASIO::ip::tcp::socket socket,
+                               RPCLIB_ASIO::local::stream_protocol::socket socket,
                                std::shared_ptr<dispatcher> disp,
                                bool suppress_exceptions)
     : async_writer(io, std::move(socket)),
@@ -30,6 +30,11 @@ server_session::server_session(server *srv, RPCLIB_ASIO::io_service *io,
 }
 
 void server_session::start() { do_read(); }
+
+session_id_t server_session::id()
+{
+    return this_session().id();
+}
 
 void server_session::close() {
     LOG_INFO("Closing session.");
@@ -63,7 +68,9 @@ void server_session::do_read() {
                     io_->post([this, msg, z]() {
                         this_handler().clear();
                         this_session().clear();
-                        this_session().set_id(reinterpret_cast<session_id_t>(this));
+                        auto sid = reinterpret_cast<session_id_t>(this);
+                        LOG_TRACE("setting id: {}", sid);
+                        this_session().set_id(sid);
                         this_server().cancel_stop();
 
                         auto resp = disp_->dispatch(msg, suppress_exceptions_);

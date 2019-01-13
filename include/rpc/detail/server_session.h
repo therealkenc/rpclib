@@ -14,6 +14,8 @@
 #include "rpc/detail/async_writer.h"
 #include "rpc/detail/log.h"
 
+#include "rpc/this_session.h"
+
 namespace rpc {
 
 class server;
@@ -23,11 +25,11 @@ namespace detail {
 class server_session : public async_writer {
 public:
     server_session(server *srv, RPCLIB_ASIO::io_service *io,
-                   RPCLIB_ASIO::ip::tcp::socket socket,
+                   RPCLIB_ASIO::local::stream_protocol::socket socket,
                    std::shared_ptr<dispatcher> disp, bool suppress_exceptions);
     void start();
-
     void close();
+    session_id_t id();
 
 private:
     void do_read();

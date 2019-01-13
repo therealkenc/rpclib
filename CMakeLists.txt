@@ -37,7 +37,8 @@ set(RPCLIB_DEFAULT_PORT 8080
   CACHE STRING "Default port used for running tests and examples")
 set(RPCLIB_DEFAULT_BUFFER_SIZE "1024 << 10" 
   CACHE STRING "Default buffer size")
-set(RPCLIB_CXX_STANDARD 11 CACHE STRING 
+#set(RPCLIB_CXX_STANDARD 11 CACHE STRING 
+set(RPCLIB_CXX_STANDARD 17 CACHE STRING 
   "C++ version used to build rpclib (Currently: Only 11 and 14 supported)")
 
 if(RPCLIB_GENERATE_COMPDB)
@@ -47,12 +48,14 @@ if(RPCLIB_GENERATE_COMPDB)
     copy ${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_BINARY_DIR}/../compile_commands.json)
 endif()
 
-if(NOT ${RPCLIB_CXX_STANDARD} EQUAL 14 AND 
-   NOT ${RPCLIB_CXX_STANDARD} EQUAL 11)
-  message(fatal_error "Unsupported C++ standard: ${RPCLIB_CXX_STANDARD}")
-endif()
+#if(NOT ${RPCLIB_CXX_STANDARD} EQUAL 14 AND 
+#   NOT ${RPCLIB_CXX_STANDARD} EQUAL 11)
+#  message(fatal_error "Unsupported C++ standard: ${RPCLIB_CXX_STANDARD}")
+#endif()
 
-set(CMAKE_CXX_STANDARD ${RPCLIB_CXX_STANDARD})
+#set(CMAKE_CXX_STANDARD ${RPCLIB_CXX_STANDARD})
+#set(CMAKE_CXX_STANDARD 17)
+
 
 #
 # Compile & install the library
@@ -101,7 +104,6 @@ add_library(${PROJECT_NAME}
   lib/rpc/detail/server_session.cc
   lib/rpc/detail/response.cc
   lib/rpc/detail/client_error.cc
-  lib/rpc/nonstd/optional.cc
   ${DEP_SOURCES}
   ${DEP_HEADERS}
   ${RPCLIB_HEADERS})
@@ -126,7 +128,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     set(UNUSED_LAMBDA_CAPTURE_WARN_SUPPORTED)
     check_warning_flag("unused-lambda-capture" UNUSED_LAMBDA_CAPTURE_WARN_SUPPORTED)
     if(${UNUSED_LAMBDA_CAPTURE_WARN_SUPPORTED})
-      list(APPEND RPCLIB_BUILD_FLAGS -Wno-no-unused-lambda-capture)
+      list(APPEND RPCLIB_BUILD_FLAGS -Wno-unused-lambda-capture)
     endif()
 
     check_warning_flag("zero-as-null-pointer-constant" ZERO_AS_NULL_POINTER_CONSTANT_WARN_SUPPORTED)
