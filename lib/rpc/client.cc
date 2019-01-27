@@ -87,6 +87,7 @@ struct client::impl {
         writer_->socket_.async_connect(endpoint_iterator, [this](std::error_code ec) {
                 if (!ec) {
                     std::unique_lock<std::mutex> lock(mut_connection_finished_);
+                    writer_->cloexec();
                     //LOG_INFO("Client connected to {}:{}", addr_, port_);
                     LOG_INFO("Client connected to {}", name_);
                     is_connected_ = true;
@@ -157,6 +158,11 @@ struct client::impl {
                               ec.message());
                 }
             });
+    }
+
+    void do_notify_fork(RPCLIB_ASIO::io_service::fork_event event)
+    {
+        io_.notify_fork(event);
     }
 
     client::connection_state get_connection_state() const { return state_; }
@@ -298,6 +304,13 @@ RPCLIB_NORETURN void client::throw_timeout(std::string const& func_name) {
     throw rpc::timeout(
         RPCLIB_FMT::format("Timeout of {}ms while calling RPC function '{}'",
                            *get_timeout(), func_name));
+}
+
+void client::notify_fork(rpc::fork_event event)
+{
+    // this static cast is okay because rpc::fork_event is really just
+    // boost::asio::io_service::fork_event
+    pimpl->do_notify_fork(static_cast<RPCLIB_ASIO::io_service::fork_event>(event));
 }
 
 client::~client() {

@@ -11,6 +11,20 @@
 
 namespace rpc {
 
+// WSLTUB FIXME this is awkward because rpclib wants to pretend asio is
+// implementation detail. Long term probably going to be better to just
+// accept boost (and mshpack) as first class dependencies.
+enum fork_event
+{
+/// Notify the io_service that the process is about to fork.
+fork_prepare,
+/// Notify the io_service that the process has forked and is the parent.
+fork_parent,
+/// Notify the io_service that the process has forked and is the child.
+fork_child
+};
+
+
 //! \brief Implements a client that connects to a msgpack-rpc server and is
 //! able to call functions synchronously or asynchronously. This is the main
 //! interfacing point for implementing client applications.
@@ -33,6 +47,8 @@ public:
     //! \param port The port on the server to connect to.
     //client(std::string const &addr, uint16_t port);
     client(std::string const &name);
+
+    void notify_fork(rpc::fork_event event);
     
     //! \cond DOXYGEN_SKIP
     client(client const &) = delete;

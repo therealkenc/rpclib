@@ -72,6 +72,12 @@ public:
         do_write();
     }
 
+    void cloexec(void)
+    {
+        int sd = socket_.native_handle();
+        fcntl(sd, F_SETFD, FD_CLOEXEC);
+    }
+
     friend class rpc::client;
 
 protected:

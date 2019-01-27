@@ -7,6 +7,7 @@
 #include "rpc/this_session.h"
 
 #include "rpc/detail/log.h"
+#include <random>
 
 namespace rpc {
 namespace detail {
@@ -17,6 +18,7 @@ static constexpr std::size_t default_buffer_size =
 server_session::server_session(server *srv, RPCLIB_ASIO::io_service *io,
                                RPCLIB_ASIO::local::stream_protocol::socket socket,
                                std::shared_ptr<dispatcher> disp,
+                               rpc::session_id_t sid,
                                bool suppress_exceptions)
     : async_writer(io, std::move(socket)),
       parent_(srv),
@@ -24,16 +26,28 @@ server_session::server_session(server *srv, RPCLIB_ASIO::io_service *io,
       read_strand_(*io),
       disp_(disp),
       pac_(),
-      suppress_exceptions_(suppress_exceptions) {
-    pac_.reserve_buffer(default_buffer_size); // TODO: make this configurable
-                                              // [sztomi 2016-01-13]
+      sid_(sid),
+      suppress_exceptions_(suppress_exceptions) 
+{
+    // TODO: make this configurable
+    // [sztomi 2016-01-13]          
+    pac_.reserve_buffer(default_buffer_size); 
 }
 
-void server_session::start() { do_read(); }
+void server_session::start() 
+{ 
+    do_read(); 
+}
 
-session_id_t server_session::id()
+/*  FIXME: honestly I don't follow the rpclib author's use of a thread local
+    session id. Instead, return globally unique sid we generated in
+    the constructor. n.b. there is probably a good reason so needs 
+    some investigation.
+ */
+session_id_t server_session::id() const
 {
-    return this_session().id();
+    //return this_session().id();
+    return sid_;
 }
 
 void server_session::close() {
@@ -68,9 +82,11 @@ void server_session::do_read() {
                     io_->post([this, msg, z]() {
                         this_handler().clear();
                         this_session().clear();
-                        auto sid = reinterpret_cast<session_id_t>(this);
-                        LOG_TRACE("setting id: {}", sid);
-                        this_session().set_id(sid);
+                        // FIXME: this is weird. Why is do_read responsible
+                        // for setting the session identifier.
+                        // auto sid = reinterpret_cast<session_id_t>(this);
+                        LOG_TRACE("setting id: {}", sid_);
+                        this_session().set_id(sid_);
                         this_server().cancel_stop();
 
                         auto resp = disp_->dispatch(msg, suppress_exceptions_);

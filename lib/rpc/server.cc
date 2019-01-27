@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <thread>
+#include <random>
 
 #include "asio.hpp"
 #include "format.h"
@@ -44,15 +45,21 @@ struct server::impl {
           io_(),
           acceptor_(io_, local::stream_protocol::endpoint(name)),
           socket_(io_),
-          suppress_exceptions_(false) {}
+          suppress_exceptions_(false) 
+    {
+        std::random_device rd;
+        generator_.seed(rd());
+    }
 
     void start_accept() {
         acceptor_.async_accept(socket_, [this](std::error_code ec) {
             if (!ec) {
                 LOG_INFO("Accepted connection.");
+                std::uniform_int_distribution<session_id_t> dist;
+                session_id_t sid = dist(generator_);
                 auto s = std::make_shared<server_session>(
                     parent_, &io_, std::move(socket_), parent_->disp_,
-                    suppress_exceptions_);
+                    sid, suppress_exceptions_);
                 s->start();
                 sessions_.push_back(s);
             } else {
@@ -86,6 +93,7 @@ struct server::impl {
     rpc::detail::thread_group loop_workers_;
     std::vector<std::shared_ptr<server_session>> sessions_;
     std::atomic_bool suppress_exceptions_;
+    std::mt19937_64 generator_;
     RPCLIB_CREATE_LOG_CHANNEL(server)
 };
 
@@ -155,9 +163,15 @@ void server::async_run(std::size_t worker_threads) {
     });
 }
 
-void server::stop() { pimpl->stop(); }
+void server::stop() 
+{ 
+    pimpl->stop(); 
+}
 
-void server::close_sessions() { pimpl->close_sessions(); }
+void server::close_sessions() 
+{ 
+    pimpl->close_sessions(); 
+}
 
 void server::close_session(std::shared_ptr<detail::server_session> const &s) {
   auto it = std::find(begin(pimpl->sessions_), end(pimpl->sessions_), s);

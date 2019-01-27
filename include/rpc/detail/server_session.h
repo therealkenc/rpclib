@@ -26,10 +26,11 @@ class server_session : public async_writer {
 public:
     server_session(server *srv, RPCLIB_ASIO::io_service *io,
                    RPCLIB_ASIO::local::stream_protocol::socket socket,
-                   std::shared_ptr<dispatcher> disp, bool suppress_exceptions);
+                   std::shared_ptr<dispatcher> disp, 
+                   rpc::session_id_t sid, bool suppress_exceptions);
     void start();
     void close();
-    session_id_t id();
+    session_id_t id() const;
 
 private:
     void do_read();
@@ -41,7 +42,9 @@ private:
     std::shared_ptr<dispatcher> disp_;
     RPCLIB_MSGPACK::unpacker pac_;
     RPCLIB_MSGPACK::sbuffer output_buf_;
+    session_id_t sid_;
     const bool suppress_exceptions_;
+    
     RPCLIB_CREATE_LOG_CHANNEL(session)
 };
 } /* detail */
